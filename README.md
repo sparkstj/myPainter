@@ -1,4 +1,4 @@
-# (Developing!) graphics-project 
+# (Developing!) mySketchpad 
 This project is mainly about paint geometry primitives in a canvas. `algorithms.py` will have all the drawing algorithms and `gui.py` along with `cmd.py` provide methods to interact with the 'brush' to draw.
 It is developed using python3.6 and tkinter package. 
 
