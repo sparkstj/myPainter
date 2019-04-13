@@ -7,7 +7,7 @@ class App(object):
         #self.default = Button(mainframe, text='greetings', command = algorithms.sayhello).grid(column=3, row=3, sticky=W)
         self.mainframe = ttk.Frame(root, padding="3 3 12 12")
         self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
-        intro = Label(self.mainframe, text="Drawing Functions:").grid(column=1, row=1, sticky=W)
+        intro = Label(self.mainframe, text="Sketch Functions:").grid(column=1, row=1, sticky=W)
         board = Tk()
         board.title('Drawing Board')
         self.canvas = Canvas(board)
@@ -171,7 +171,7 @@ class App(object):
         
 
 root = Tk()
-root.title('Graphics Menu')
+root.title('mySketchpad')
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 
