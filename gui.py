@@ -1,7 +1,6 @@
 from tkinter import *
 from tkinter import ttk
 import algorithms
-import main
 
 class App(object):
     def __init__(self, master):
