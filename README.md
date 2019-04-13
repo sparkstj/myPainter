@@ -11,4 +11,4 @@ Only `gui.py` can be compiled and run for now, and compilation is through comman
 
 Finished GUI setup 1st edition, add basic algorithm input error handling with respect to the GUI. GUI can be run with `python3 gui.py`. Current GUI preview:
 
-![gui_1st](gui_1st.png)
+![gui_1st](gui_1st.jpg)
