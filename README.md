@@ -9,8 +9,6 @@ Only `gui.py` can be compiled and run for now, and compilation is through comman
 
 4/14/2019
 
-Finished GUI setup 1st edition, add basic algorithm input error handling with respect to the GUI. GUI can be run with `python3 gui.py`
-
-The current GUI looks like the following figure.
+Finished GUI setup 1st edition, add basic algorithm input error handling with respect to the GUI. GUI can be run with `python3 gui.py`. Current GUI preview:
 
 {% asset_img gui_1st.jpg gui_1st%}
