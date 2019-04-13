@@ -6,3 +6,7 @@ It is developed using python3.6 and tkinter package.
 
 Completed code skeleton for `algorithms.py` and simple test for `gui.py`.
 Only `gui.py` can be compiled and run for now, and compilation is through command line `python3 gui.py`.
+
+4/14/2019
+
+Finished GUI setup 1st edition, add basic algorithm input error handling with respect to the GUI.
