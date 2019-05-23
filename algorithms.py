@@ -3,6 +3,10 @@ from tkinter import ttk
 
 __author__ = 'Jing Tan'
 
+brushColor = "#476042"
+
+def drawPixel(x, y, canvas):
+    canvas.create_rectangle(x, y, x, y, fill=brushColor)
 
 def sayhello():
     ''' default action.
@@ -49,8 +53,151 @@ def drawLine(id, p1, p2, algorithm, canvas):
      algorithm: string, denotes drawing algorithm, eg:DDA or bresenham
      '''
     try:
+        if (algorithm=="DDA"):
+            (xstart, ystart) = p1
+            (xend, yend) = p2
+            dx = xend - xstart
+            dy = yend - ystart
+            x, y = xstart, ystart
 
+            steps = max(abs(dx), abs(dy))
+            drawPixel(int(x), int(y), canvas)
+        
+            xInc = dx / steps
+            yInc = dy / steps
+
+            for i in range(steps):  
+                x = x + xInc
+                y = y + yInc
+                drawPixel(int(x), int(y), canvas)
         print(id, p1, p2, algorithm)
+
+        if (algorithm=="Bresenham"):
+            (xstart, ystart) = p1
+            (xend, yend) = p2
+            dx = xend - xstart
+            dy = yend - ystart
+            m = dy / dx
+            dx = abs(dx)
+            dy = abs(dy)
+            dx_2 = 2 * dx
+            dy_2 = 2 * dy
+            dxsdy_2 = 2 * (dx - dy)
+            dysdx_2 = 2 * (dy - dx)
+            #print(m)
+            if (m > 1):
+                p = 2 * dx - dy
+                if (ystart > yend):
+                    x = xend
+                    y = yend
+                    yend = ystart
+                else:
+                    x = xstart
+                    y = ystart
+                drawPixel(x, y, canvas)
+                while (y < yend):
+                    y = y + 1
+                    if p < 0:
+                        p = p + dx_2
+                    else:
+                        x = x + 1
+                        p = p + dxsdy_2
+                    drawPixel(x, y)
+            elif m == 1:
+                if xstart > xend:
+                    x = xend
+                    y = yend
+                    xend = xstart
+                else:
+                    x = xstart
+                    y = ystart
+                drawPixel(x, y, canvas)
+                while (x < xend):
+                    x = x + 1
+                    y = y + 1
+                    drawPixel(x, y, canvas)
+            elif (m>0) and (m<1):
+                p = 2 * dy - dx
+                if xstart > xend:
+                    x = xend
+                    y = yend
+                    xend = xstart
+                else:
+                    x = xstart
+                    y = ystart
+                drawPixel(x, y, canvas)
+                while (x < xend):
+                    x = x + 1
+                    if p < 0:
+                        p = p + dy_2
+                    else:
+                        y = y + 1
+                        p = p + dysdx_2
+                    drawPixel(x, y, canvas)
+            elif (m > -1) and (m < 0):
+                p = 2 * dy - dx
+                if xstart < xend:
+                    x = xend
+                    y = yend
+                    xend = xstart
+                else: 
+                    x = xstart
+                    y = ystart
+                drawPixel(x,y,canvas)
+                while (x > xend):
+                    x = x - 1
+                    if p < 0:
+                        p = p + dy_2
+                    else:
+                        y = y + 1
+                        p = p + dysdx_2
+                    drawPixel(x,y,canvas)
+            elif m == -1.0:
+                if xstart > xend:
+                    x = xend
+                    y = yend
+                    xend = xstart
+                else:
+                    x = xstart
+                    y = ystart
+                drawPixel(x,y,canvas)
+                while (x < xend):
+                    x = x + 1
+                    y = y - 1
+                    drawPixel(x,y,canvas)
+            elif m < -1:
+                p = 2*dx-dy
+                if ystart < yend:
+                    x = xend
+                    y = yend
+                    yend = ystart
+                else:
+                    x = xstart
+                    y = ystart
+                drawPixel(x,y,canvas)
+                while (y > yend):
+                    y = y - 1
+                    if p < 0:
+                        p = p + dx_2
+                    else:
+                        x = x + 1
+                        p = p + dxsdy_2
+                    drawPixel(x,y,canvas)
+            else:
+                #print("hi")
+                if (xstart == xend):
+                    y = min(ystart, yend)
+                    x = xstart
+                    for i in range(dy):
+                        drawPixel(x,y,canvas)
+                        y = y + 1
+                elif ystart == yend:
+                    x = min(xstart, xend)
+                    y = ystart
+                    for i in range(dx):
+                        drawPixel(x,y,canvas)
+                        x = x + 1
+         
     except ValueError:
         pass
 
