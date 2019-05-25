@@ -5,7 +5,7 @@ import algorithms
 class App(object):
     def __init__(self, master):
         #self.default = Button(mainframe, text='greetings', command = algorithms.sayhello).grid(column=3, row=3, sticky=W)
-        self.mainframe = ttk.Frame(self, padding="3 3 12 12")
+        self.mainframe = ttk.Frame(root, padding="3 3 12 12")
         self.mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
         intro = Label(self.mainframe, text="Sketch Functions:").grid(column=1, row=1, sticky=W)
         board = Tk()
@@ -68,6 +68,7 @@ class App(object):
         algorithm = StringVar()
         options = ["DDA","bresenham"]
         algorithm.set(options[0])
+        print(algorithm)
         algorithm_om = OptionMenu(self.mainframe, algorithm, *options)
         algorithm_om.grid(column=7,row=5,sticky=W)
         endpoints_button = Button(self.mainframe, text="Draw Line", command= lambda: algorithms.drawLine(self.id, endpoint1, endpoint2, algorithm, self.canvas)).grid(column=1,row=5,sticky=W)
