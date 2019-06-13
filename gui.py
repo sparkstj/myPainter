@@ -85,6 +85,12 @@ def ScaleSignal(id, s):
 	center = clickList.pop()
 	algorithms.scale(id, center, s, w)
 
+def ClipSignal(id):
+	id = int(id)
+	leftup = MotionList[0]
+	rightdown = MotionList[len(MotionList)-1]
+	algorithms.clip(id, leftup, rightdown, algorithm.get(),w)
+
 def drag( event):
 	MotionList.append((event.x, event.y))
 	
@@ -122,11 +128,6 @@ def paint( event ):
 			algorithms.drawLine(Objects.ObjectId, clickList[len(clickList)-2],clickList[len(clickList)-1], algorithm.get(), w ,Objects.brushColor)
 			Objects.missionList.pop()
 
-		
-
-
-
-		
 def Clean():
 	print("clean")
 	for i in Objects.obList[1]:
@@ -159,7 +160,7 @@ Panel.title("This is the Control Panel")
 
 algorithm_label = Label(PanelFrame, text='Algorithm:').grid(column=4,row=1,sticky=W)
 algorithm = StringVar(Panel)
-option = ["DDA","Bresenham","MidPointCircle","Bezier","B-spline"]
+option = ["DDA","Bresenham","MidPointCircle","Bezier","B-spline","Cohen–Sutherland","Liang-Barsky"]
 algorithm.set(option[0])
 #print(algorithm.get())
 algorithm_om = OptionMenu(PanelFrame, algorithm, *option)
@@ -209,7 +210,9 @@ scale_label = Label(PanelFrame, text="Scaling parameter:", justify=CENTER).grid(
 scale_entry = Entry(PanelFrame)
 scale_entry.grid(column=5,row=10,sticky=W)
 scale_button = Button(PanelFrame, text="Scale", command=lambda: ScaleSignal(sid_entry.get(), scale_entry.get())).grid(column=1,row=10,sticky=W)
-
+cid_entry = Entry(PanelFrame)
+cid_entry.grid(column=2,row=11,sticky=W)
+clip_button = Button(PanelFrame, text="Clip", command=lambda: ClipSignal(cid_entry.get())).grid(column=1,row=11,sticky=W)
 #ControlMessage = Label(Panel, text="Click in Canvas before Click in Control Buttons").grid(column=1, row=3, sticky=W)
 #CleanButton = Button(PanelFrame, text="Clean object 1", command=Clean).grid(column=1, row=3, sticky=W)
 

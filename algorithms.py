@@ -36,13 +36,13 @@ def resetCanvas(width, height, canvas):
     width, height: int, 100 <= width, height <= 1000
     '''
     try:
-        while Objects.obList:
-            top = Objects.obList.pop()
-            for i in top:
-                canvas.delete(i)    
+        Objects.obList.clear()  
         canvas.delete("all")  
         Objects.ObjectId = -1
         Objects.obList.append([]) 
+        Objects.xyList.clear()
+        Objects.xyList.append([])
+        Objects.missionList.clear()
         width = int(width.get())
         height = int(height.get())
         print(width, height, type(width), type(height))
@@ -100,7 +100,7 @@ def drawLine(id, p1, p2, algorithm, canvas, brushColor):
      algorithm: string, denotes drawing algorithm, eg:DDA or bresenham
      '''
     try:
-        Objects.missionList.append(["line", id, p1, p2, algorithm,brushColor])
+        Objects.missionList.append(["line", id, p1, p2, algorithm, brushColor])
         print("drawcolor=",Objects.brushColor)
         if (algorithm=="DDA"): #This Implementation Combines the situation of 
             (xstart, ystart) = p1
@@ -520,6 +520,97 @@ def scale(id, center, s, canvas):
         print(id,center,s)
     except ValueError:
         pass
+# Defining region codes 
+INSIDE = 0  #0000 
+LEFT = 1    #0001 
+RIGHT = 2   #0010 
+BOTTOM = 4  #0100 
+TOP = 8     #1000 
+# Function to compute region code for a point(x,y) 
+def computeCode(x, y, x_min, x_max, y_min, y_max): 
+    code = INSIDE 
+    if x < x_min:      # to the left of rectangle 
+        code |= LEFT 
+    elif x > x_max:    # to the right of rectangle 
+        code |= RIGHT 
+    if y < y_min:      # below the rectangle 
+        code |= BOTTOM 
+    elif y > y_max:    # above the rectangle 
+        code |= TOP 
+    return code  
+# Implementing Cohen-Sutherland algorithm 
+# Clipping a line from P1 = (x1, y1) to P2 = (x2, y2) 
+# https://www.geeksforgeeks.org/line-clipping-set-1-cohen-sutherland-algorithm/
+def cohenSutherlandClip(x1, y1, x2, y2, x_min, x_max, y_min, y_max): 
+    # Compute region codes for P1, P2 
+    code1 = computeCode(x1, y1, x_min, x_max, y_min, y_max) 
+    code2 = computeCode(x2, y2, x_min, x_max, y_min, y_max) 
+    accept = False
+    while True: 
+        # If both endpoints lie within rectangle 
+        if code1 == 0 and code2 == 0: 
+            accept = True
+            break
+        # If both endpoints are outside rectangle 
+        elif (code1 & code2) != 0: 
+            break
+        # Some segment lies within the rectangle 
+        else: 
+            # Line Needs clipping 
+            # At least one of the points is outside,  
+            # select it 
+            x = 1.0
+            y = 1.0
+            if code1 != 0: 
+                code_out = code1 
+            else: 
+                code_out = code2 
+            # Find intersection point 
+            # using formulas y = y1 + slope * (x - x1),  
+            # x = x1 + (1 / slope) * (y - y1) 
+            if code_out & TOP: 
+                # point is above the clip rectangle 
+                x = x1 + (x2 - x1) * \
+                                (y_max - y1) / (y2 - y1) 
+                y = y_max 
+            elif code_out & BOTTOM: 
+                # point is below the clip rectangle 
+                x = x1 + (x2 - x1) * \
+                                (y_min - y1) / (y2 - y1) 
+                y = y_min 
+            elif code_out & RIGHT: 
+                # point is to the right of the clip rectangle 
+                y = y1 + (y2 - y1) * \
+                                (x_max - x1) / (x2 - x1) 
+                x = x_max 
+            elif code_out & LEFT: 
+                  
+                # point is to the left of the clip rectangle 
+                y = y1 + (y2 - y1) * \
+                                (x_min - x1) / (x2 - x1) 
+                x = x_min 
+            # Now intersection point x,y is found 
+            # We replace point outside clipping rectangle 
+            # by intersection point 
+            if code_out == code1: 
+                x1 = x 
+                y1 = y 
+                code1 = computeCode(x1,y1, x_min, x_max, y_min, y_max) 
+            else: 
+                x2 = x 
+                y2 = y 
+                code2 = computeCode(x2, y2, x_min, x_max, y_min, y_max) 
+    if accept: 
+        print ("Line accepted from %.2f,%.2f to %.2f,%.2f" % (x1,y1,x2,y2))
+        return x1,y1,x2,y2 
+        # Here the user can add code to display the rectangle 
+        # along with the accepted (portion of) lines  
+    else: 
+        print("Line rejected, completely outside the clipping area") 
+        return x1,y1,x2,y2 
+
+def liangBarskyClip(x1, y1, x2, y2, x_min, x_max, y_min, y_max):
+    
 
 def clip(id, p1, p2, algorithm, canvas):
     ''' id: unique identity for each primitive
@@ -527,7 +618,29 @@ def clip(id, p1, p2, algorithm, canvas):
     algorithm: string, denotes the clipping algorithm.
     '''
     try:
-        
+        if Objects.missionList[id][0] != "line":
+            print("The clip target is not a line, please select a new target!")
+            return 
+        x1, y1 = Objects.missionList[id][2]
+        x2, y2 = Objects.missionList[id][3]
+        brushColor = Objects.missionList[id][5]
+        if algorithm == "Cohen–Sutherland":
+            new_x1, new_y1, new_x2, new_y2 = cohenSutherlandClip(x1, y1, x2, y2, p1[0], p2[0], p1[1], p2[1])
+        elif algorithm == "Liang-Barsky":
+            return 
+        else:
+            print("Wrong Algorithm for Clipping")
+            return 
+        for i in Objects.obList[id]:
+            canvas.delete(i)
+        Objects.obList[id].clear()
+        Objects.xyList[id].clear()
+        new_x1, new_y1, new_x2, new_y2 = int(new_x1), int(new_y1), int(new_x2), int(new_y2)
+        drawLine(id, (new_x1,new_y1),(new_x2,new_y2), Objects.missionList[id][4], canvas, brushColor)
+        targetMission = Objects.missionList.pop()
+        Objects.missionList[id].clear()
+        while (targetMission):
+            Objects.missionList[id].append(targetMission.pop(0))
         print(id,p1,p2,algorithm)
     except ValueError:
         pass
