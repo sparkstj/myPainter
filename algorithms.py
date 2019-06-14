@@ -10,12 +10,23 @@ import os
 
 __author__ = 'Jing Tan'
 
+def findId(id):
+    for i in range(len(Objects.missionList)):
+        if Objects.missionList[i][1] == id:
+            return i
+
+
 def drawPixel(x, y, canvas, id, brushColor):
-    variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
+    if canvas:
+        variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
+        Objects.obList[index].append(variable)
+        return variable
     if id != -1:
-        Objects.xyList[id].append((x,y,brushColor))
-        Objects.obList[id].append(variable)
-    return variable
+        index = findId(id)
+        #print(index, Objects.missionList)
+        Objects.xyList[index].append((x,y,brushColor))
+        
+    
 
 def drawImagePixel(x,y,brushColor):
     draw = ImageDraw.Draw(Objects.image)
@@ -36,22 +47,26 @@ def resetCanvas(width, height, canvas):
     width, height: int, 100 <= width, height <= 1000
     '''
     try:
-        Objects.obList.clear()  
-        canvas.delete("all")  
-        Objects.ObjectId = -1
-        Objects.obList.append([]) 
         Objects.xyList.clear()
         Objects.xyList.append([])
         Objects.missionList.clear()
-        width = int(width.get())
-        height = int(height.get())
+        #Objects.idList.clear()
+        width = int(width)
+        height = int(height)
         print(width, height, type(width), type(height))
-        canvas.bind("<Configure>")
-        canvas.width = width
-        canvas.height = height
-        canvas.config(width = canvas.width, height=canvas.height)
-        canvas.pack(fill=BOTH, expand=YES)
-        Objects.image=Image.new("RGB",(canvas.width,canvas.height),(255,255,255))
+        if canvas:
+            Objects.obList.clear()  
+            Objects.obList.append([]) 
+            Objects.ObjectId = -1
+            canvas.delete("all")  
+            canvas.bind("<Configure>")
+            canvas.width = width
+            canvas.height = height
+            canvas.config(width = canvas.width, height=canvas.height)
+            canvas.pack(fill=BOTH, expand=YES)
+        Objects.image=Image.new("RGB",(width,height),(255,255,255))
+        Objects.width = width
+        Objects.height = height
         
     except ValueError:
         pass
@@ -60,24 +75,19 @@ def saveCanvas(name, canvas):
     '''save current canvas as name.bmp, 
     name: string
     '''
-    canvas.update()
-    name = name.get()
-    canvas.bind("<Configure>")
-    Objects.image = Image.new("RGB",(canvas.width,canvas.height),(255,255,255))
+    Objects.image = Image.new("RGB",(Objects.width,Objects.height),(255,255,255))
     print("name = {}".format(name))
-    canvas.postscript(file="{}.eps".format(name),colormode='color')
     for i in Objects.xyList:
         for j in i:
             drawImagePixel(j[0],j[1],j[2])
     Objects.image.save(name+'.bmp')
-
-    
+  
 def setColor(R, G, B, canvas):
     '''set brush color, 
     0 <= R, G, B <= 255
     '''
     try:
-        r, g, b = int(R.get()), int(G.get()), int(B.get())
+        r, g, b = int(R), int(G), int(B)
         print(r,type(r),g,type(g),b,type(b))
         r_str = hex(r).lstrip("0x")
         g_str = hex(g).lstrip("0x")
@@ -100,8 +110,10 @@ def drawLine(id, p1, p2, algorithm, canvas, brushColor):
      algorithm: string, denotes drawing algorithm, eg:DDA or bresenham
      '''
     try:
+        Objects.xyList.append([])
         Objects.missionList.append(["line", id, p1, p2, algorithm, brushColor])
-        print("drawcolor=",Objects.brushColor)
+        #Objects.idList.append(id)
+        #print("drawcolor=",Objects.brushColor)
         if (algorithm=="DDA"): #This Implementation Combines the situation of 
             (xstart, ystart) = p1
             (xend, yend) = p2
@@ -245,8 +257,7 @@ def drawLine(id, p1, p2, algorithm, canvas, brushColor):
                     y = ystart
                     for i in range(dx):
                         drawPixel(x,y,canvas,id,brushColor)
-                        x = x + 1
-        canvas.update()  
+                        x = x + 1 
     except ValueError:
         pass
 
@@ -257,8 +268,10 @@ def drawPolygon(id, vertices, algorithm, canvas, brushColor):
     algorithm: string, denotes drawing algorithm
     '''
     try:
+        Objects.xyList.append([])
         print(id, type(id))
         Objects.missionList.append(["polygon",id, vertices, algorithm,brushColor])
+        #Objects.idList.append(id)
         for i in range(len(vertices)-1):
             drawLine(id, vertices[i], vertices[i+1], algorithm, canvas, brushColor=brushColor)
             Objects.missionList.pop()
@@ -273,6 +286,7 @@ def drawEllipse(id, center, r, canvas, algorithm, brushColor):
     r: float tuple, (major semi-axis, minor semi-axis)
     '''
     try:
+        Objects.xyList.append([])
         Objects.missionList.append(["ellipse", id, center, r, algorithm, brushColor])
         #brushColor = Objects.brushColor
         print("Ellipse {} at center{}, radius{} using Algorithm {}".format(id, center, r, algorithm))
@@ -384,6 +398,7 @@ def drawCurve(id, points, algorithm, canvas, brushColor):
     algorithm: string, denotes drawing algorithm
     '''
     try:
+        Objects.xyList.append([])
         Objects.missionList.append(["curve", id, points, algorithm,brushColor])
         #brushColor = Objects.brushColor
         if (algorithm == "Bezier"):
@@ -425,18 +440,22 @@ def translate(id, d, canvas):
     d: float tuple, denotes the translation vector
     '''
     try:
-        obTarget = Objects.obList[id]
-        xyTarget = Objects.xyList[id]
-        length = len(obTarget)
+        index = findId(id)
+        if canvas:
+            obTarget = Objects.obList[index]
+        xyTarget = Objects.xyList[index]
+        length = len(xyTarget)
         for i in range(length):
-            ob = obTarget.pop(0)
+            if canvas:
+                ob = obTarget.pop(0)
+                canvas.delete(ob)
             xy = xyTarget.pop(0)
-            canvas.delete(ob)
             x = xy[0]+d[0]
             y = xy[1]+d[1]
             brushColor = xy[2]
-            variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
-            obTarget.append(variable)
+            if canvas:
+                variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
+                obTarget.append(variable)
             xyTarget.append((x,y,brushColor))
         print(id, d)
     except ValueError:
@@ -448,20 +467,24 @@ def rotate(id, center, r, canvas):
     r: float, the angle of clockwise rotation
     '''
     try:
-        obTarget = Objects.obList[id]
-        xyTarget = Objects.xyList[id]
-        length = len(obTarget)
+        index = findId(id)
+        if canvas:
+            obTarget = Objects.obList[index]
+        xyTarget = Objects.xyList[index]
+        length = len(xyTarget)
         for i in range(length):
-            ob = obTarget.pop(0)
+            if canvas: 
+                ob = obTarget.pop(0)
+                canvas.delete(ob)
             xy = xyTarget.pop(0)
-            canvas.delete(ob)
             dx = xy[0]-center[0]
             dy = xy[1]-center[1]
             x = center[0]+np.cos(r)*dx-np.sin(r)*dy
             y = center[1]+np.sin(r)*dx+np.cos(r)*dy
             brushColor = xy[2]
-            variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
-            obTarget.append(variable)
+            if canvas:
+                variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
+                obTarget.append(variable)
             xyTarget.append((x,y,brushColor))
         print(id, center, r)
     except ValueError:
@@ -473,16 +496,20 @@ def scale(id, center, s, canvas):
     s: float, denotes scale of scaling
     '''
     try:
-        obTarget = Objects.obList[id]
-        xyTarget = Objects.xyList[id]
-        length = len(obTarget)
+        index = findId(id)
+        if canvas:
+            obTarget = Objects.obList[index]
+        xyTarget = Objects.xyList[index]
+        length = len(xyTarget)
         for i in range(length):
-            ob = obTarget.pop(0)
+            if canvas: 
+                ob = obTarget.pop(0)
+                canvas.delete(ob)
             xy = xyTarget.pop(0)
-            canvas.delete(ob)
-        obTarget.clear()
+        if canvas: 
+            obTarget.clear()
         xyTarget.clear()
-        missionTarget = Objects.missionList[id]
+        missionTarget = Objects.missionList[index]
         if missionTarget[0] == "line":
             p1 = missionTarget[2]
             p2 = missionTarget[3]
@@ -609,8 +636,44 @@ def cohenSutherlandClip(x1, y1, x2, y2, x_min, x_max, y_min, y_max):
         print("Line rejected, completely outside the clipping area") 
         return x1,y1,x2,y2 
 
+def clipTest(p, q, t1, t2):
+    retVal = True
+    if p < 0.0:
+        r = q/p
+        if r > t2:
+            retVal = False
+        elif r > t1:
+            t1 = r
+    elif p > 0.0:
+        r = q/p
+        if r < t1:
+            retVal = False
+        elif r < t2:
+            t2 = r
+    elif q < 0.0:
+        retVal = False
+    return retVal, t1, t2
+
 def liangBarskyClip(x1, y1, x2, y2, x_min, x_max, y_min, y_max):
-    
+    t1, t2, dx = 0.0, 1.0, x2-x1
+    flag, t1, t2 = clipTest(-dx, x1-x_min, t1, t2)
+    if (flag):
+        flag, t1, t2 = clipTest(dx, x_max-x1, t1, t2)
+        if (flag):
+            dy = y2-y1
+            flag, t1, t2 = clipTest(-dy, y1-y_min, t1, t2)
+            if (flag):
+                flag, t1, t2 = clipTest(dy, y_max-y1, t1,t2)
+                if (flag):
+                    if (t2 < 1.0):
+                        x2 = x1+t2*dx
+                        y2 = y1+t2*dy
+                    if (t1 > 0.0):
+                        x1 = x1 + t1*dx
+                        y1 = y1 + t1*dy
+                    return int(x1), int(y1), int(x2), int(y2)
+    print("Line unaccepted!")
+    return 
 
 def clip(id, p1, p2, algorithm, canvas):
     ''' id: unique identity for each primitive
@@ -618,29 +681,33 @@ def clip(id, p1, p2, algorithm, canvas):
     algorithm: string, denotes the clipping algorithm.
     '''
     try:
-        if Objects.missionList[id][0] != "line":
+        index = findId(id)
+        if Objects.missionList[index][0] != "line":
             print("The clip target is not a line, please select a new target!")
-            return 
-        x1, y1 = Objects.missionList[id][2]
-        x2, y2 = Objects.missionList[id][3]
-        brushColor = Objects.missionList[id][5]
+            return
+        print(Objects.missionList[index]) 
+        x1, y1 = Objects.missionList[index][2]
+        x2, y2 = Objects.missionList[index][3]
+        brushColor = Objects.missionList[index][5]
         if algorithm == "Cohen–Sutherland":
             new_x1, new_y1, new_x2, new_y2 = cohenSutherlandClip(x1, y1, x2, y2, p1[0], p2[0], p1[1], p2[1])
         elif algorithm == "Liang-Barsky":
-            return 
+            new_x1, new_y1, new_x2, new_y2 = liangBarskyClip(x1, y1, x2, y2, p1[0], p2[0], p1[1], p2[1])
+            #print(new_x1, new_y1, new_x2, new_y2)
         else:
-            print("Wrong Algorithm for Clipping")
+            print("Wrong Algorithm for Line Clipping")
             return 
-        for i in Objects.obList[id]:
-            canvas.delete(i)
-        Objects.obList[id].clear()
-        Objects.xyList[id].clear()
+        if canvas:
+            for i in Objects.obList[index]:
+                canvas.delete(i)
+            Objects.obList[index].clear()
+        Objects.xyList[index].clear()
         new_x1, new_y1, new_x2, new_y2 = int(new_x1), int(new_y1), int(new_x2), int(new_y2)
-        drawLine(id, (new_x1,new_y1),(new_x2,new_y2), Objects.missionList[id][4], canvas, brushColor)
+        drawLine(id, (new_x1,new_y1),(new_x2,new_y2), Objects.missionList[index][4], canvas, brushColor)
         targetMission = Objects.missionList.pop()
-        Objects.missionList[id].clear()
+        Objects.missionList[index].clear()
         while (targetMission):
-            Objects.missionList[id].append(targetMission.pop(0))
-        print(id,p1,p2,algorithm)
+            Objects.missionList[index].append(targetMission.pop(0))
+        #print(index,p1,p2,algorithm)
     except ValueError:
         pass
