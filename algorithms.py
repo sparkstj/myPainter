@@ -19,14 +19,14 @@ def findId(id):
 def drawPixel(x, y, canvas, id, brushColor):
     if canvas:
         variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
-        Objects.obList[index].append(variable)
-        return variable
     if id != -1:
         index = findId(id)
+        if canvas:
+            Objects.obList[index].append(variable)
         #print(index, Objects.missionList)
         Objects.xyList[index].append((x,y,brushColor))
-        
-    
+    if canvas:
+        return variable  
 
 def drawImagePixel(x,y,brushColor):
     draw = ImageDraw.Draw(Objects.image)
@@ -51,19 +51,17 @@ def resetCanvas(width, height, canvas):
         Objects.xyList.append([])
         Objects.missionList.clear()
         #Objects.idList.clear()
-        width = int(width)
-        height = int(height)
-        print(width, height, type(width), type(height))
+        if width and height:
+            width = int(width)
+            height = int(height)
+            #print(width, height, type(width), type(height))
+        else:
+            width, height = Objects.width, Objects.height
         if canvas:
             Objects.obList.clear()  
             Objects.obList.append([]) 
             Objects.ObjectId = -1
             canvas.delete("all")  
-            canvas.bind("<Configure>")
-            canvas.width = width
-            canvas.height = height
-            canvas.config(width = canvas.width, height=canvas.height)
-            canvas.pack(fill=BOTH, expand=YES)
         Objects.image=Image.new("RGB",(width,height),(255,255,255))
         Objects.width = width
         Objects.height = height
@@ -76,7 +74,7 @@ def saveCanvas(name, canvas):
     name: string
     '''
     Objects.image = Image.new("RGB",(Objects.width,Objects.height),(255,255,255))
-    print("name = {}".format(name))
+    #print("name = {}".format(name))
     for i in Objects.xyList:
         for j in i:
             drawImagePixel(j[0],j[1],j[2])
@@ -88,7 +86,7 @@ def setColor(R, G, B, canvas):
     '''
     try:
         r, g, b = int(R), int(G), int(B)
-        print(r,type(r),g,type(g),b,type(b))
+        #print(r,type(r),g,type(g),b,type(b))
         r_str = hex(r).lstrip("0x")
         g_str = hex(g).lstrip("0x")
         b_str = hex(b).lstrip("0x")
@@ -98,9 +96,9 @@ def setColor(R, G, B, canvas):
             g_str = "00"
         if (b_str == ""):
             b_str = "00"
-        print(r_str, g_str, b_str)
+        #print(r_str, g_str, b_str)
         Objects.brushColor = "#"+r_str+g_str+b_str
-        print(Objects.brushColor)
+        #print(Objects.brushColor)
     except ValueError:
         pass
 
@@ -133,7 +131,7 @@ def drawLine(id, p1, p2, algorithm, canvas, brushColor):
                 drawPixel(int(x), int(y), canvas, id,brushColor)
         
 
-        if (algorithm=="Bresenham"):
+        elif (algorithm=="Bresenham"):
             (xstart, ystart) = p1
             (xend, yend) = p2
             dx = xend - xstart
@@ -258,6 +256,9 @@ def drawLine(id, p1, p2, algorithm, canvas, brushColor):
                     for i in range(dx):
                         drawPixel(x,y,canvas,id,brushColor)
                         x = x + 1 
+        else:
+            print("Wrong Algorithm for Line/Polygon!")
+            #Objects.ObjectId = Objects.ObjectId - 1
     except ValueError:
         pass
 
@@ -269,7 +270,7 @@ def drawPolygon(id, vertices, algorithm, canvas, brushColor):
     '''
     try:
         Objects.xyList.append([])
-        print(id, type(id))
+        #print(id, type(id))
         Objects.missionList.append(["polygon",id, vertices, algorithm,brushColor])
         #Objects.idList.append(id)
         for i in range(len(vertices)-1):
@@ -289,7 +290,7 @@ def drawEllipse(id, center, r, canvas, algorithm, brushColor):
         Objects.xyList.append([])
         Objects.missionList.append(["ellipse", id, center, r, algorithm, brushColor])
         #brushColor = Objects.brushColor
-        print("Ellipse {} at center{}, radius{} using Algorithm {}".format(id, center, r, algorithm))
+        #print("Ellipse {} at center{}, radius{} using Algorithm {}".format(id, center, r, algorithm))
         (a, b) = r
         x = 0
         y = b
@@ -320,7 +321,7 @@ def drawEllipse(id, center, r, canvas, algorithm, brushColor):
                 else:
                     d2 = d2 + a*a*(3-2*y)
                     y = y - 1
-        if (algorithm=="Bresenham"):
+        elif (algorithm=="Bresenham"):
             #print("Bresenham")
             d = b*b + a*a*(0.25-b)
             fx = int(a*a / np.sqrt(float(a*a + b*b)))
@@ -348,6 +349,8 @@ def drawEllipse(id, center, r, canvas, algorithm, brushColor):
                 drawPixel(center[0]-x, center[1]+y, canvas, id, brushColor)
                 drawPixel(center[0]-x, center[1]-y, canvas, id, brushColor)
                 drawPixel(center[0]+x, center[1]-y, canvas, id, brushColor)
+        else: 
+            print("Wrong Algorithm for Ellipse!")
     except ValueError:
         pass
 
@@ -421,7 +424,7 @@ def drawCurve(id, points, algorithm, canvas, brushColor):
                 #print(y)
             for i in range(len(x)):
                 drawPixel(x[i],y[i], canvas, id, brushColor)
-        if (algorithm == "B-spline"):
+        elif (algorithm == "B-spline"):
             if Manhattan(points[0],points[len(points)-1]) <=8:
                 points.pop()
                 #points.append(points[0])
@@ -432,6 +435,8 @@ def drawCurve(id, points, algorithm, canvas, brushColor):
                 result = bspline(points)
             for i in result:
                 drawPixel(i[0],i[1],canvas, id, brushColor)
+        else:
+            print("Wrong Algorithm to draw Curve!")
     except ValueError:
         pass
 
@@ -446,18 +451,46 @@ def translate(id, d, canvas):
         xyTarget = Objects.xyList[index]
         length = len(xyTarget)
         for i in range(length):
-            if canvas:
+            if canvas: 
                 ob = obTarget.pop(0)
                 canvas.delete(ob)
             xy = xyTarget.pop(0)
-            x = xy[0]+d[0]
-            y = xy[1]+d[1]
-            brushColor = xy[2]
-            if canvas:
-                variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
-                obTarget.append(variable)
-            xyTarget.append((x,y,brushColor))
-        print(id, d)
+        if canvas: 
+            obTarget.clear()
+        xyTarget.clear()
+        missionTarget = Objects.missionList[index]
+        if missionTarget[0] == "line":
+            p1 = missionTarget[2]
+            p2 = missionTarget[3]
+            new_p1 = p1[0]+d[0], p1[1]+d[1]
+            new_p2 = p2[0]+d[0], p2[1]+d[1]
+            new_p1 = int(new_p1[0]), int(new_p1[1])
+            new_p2 = int(new_p2[0]), int(new_p2[1])
+            drawLine(missionTarget[1], new_p1, new_p2, missionTarget[4], canvas, brushColor=missionTarget[5])
+        if missionTarget[0] == 'polygon':
+            vertices = missionTarget[2]
+            new_vertices = []
+            for i in vertices:
+                new_i = i[0]+d[0], i[1]+d[1]
+                new_i = int(new_i[0]),int(new_i[1])
+                new_vertices.append(new_i)
+            drawPolygon(missionTarget[1], new_vertices, missionTarget[3], canvas, brushColor=missionTarget[4])
+        if missionTarget[0] == 'ellipse':
+            center_e = missionTarget[2]
+            center_e = center_e[0]+d[0], center_e[1]+d[1]
+            drawEllipse(missionTarget[1],center_e, missionTarget[3], canvas, missionTarget[4], brushColor=missionTarget[5])
+        if missionTarget[0] == 'curve':
+            points = missionTarget[2]
+            new_points = []
+            for i in points:
+                new_i = i[0]+d[0], i[1]+d[1]
+                new_i = int(new_i[0]),int(new_i[1])
+                new_points.append(new_i)
+            drawCurve(missionTarget[1], new_points, missionTarget[3], canvas,brushColor= missionTarget[4])
+        target = Objects.missionList.pop()
+        missionTarget.clear()
+        while (target):
+            missionTarget.append(target.pop(0))
     except ValueError:
         pass
 
@@ -477,16 +510,54 @@ def rotate(id, center, r, canvas):
                 ob = obTarget.pop(0)
                 canvas.delete(ob)
             xy = xyTarget.pop(0)
-            dx = xy[0]-center[0]
-            dy = xy[1]-center[1]
-            x = center[0]+np.cos(r)*dx-np.sin(r)*dy
-            y = center[1]+np.sin(r)*dx+np.cos(r)*dy
-            brushColor = xy[2]
-            if canvas:
-                variable = canvas.create_rectangle(x, y, x, y, outline=brushColor)
-                obTarget.append(variable)
-            xyTarget.append((x,y,brushColor))
-        print(id, center, r)
+        if canvas: 
+            obTarget.clear()
+        xyTarget.clear()
+        missionTarget = Objects.missionList[index]
+        if missionTarget[0] == "line":
+            p1 = missionTarget[2]
+            p2 = missionTarget[3]
+            dx = (p1[0]-center[0])
+            dy = (p1[1]-center[1])
+            new_p1 = center[0]+np.cos(r)*dx-np.sin(r)*dy, center[1]+np.sin(r)*dx+np.cos(r)*dy
+            dx = (p2[0]-center[0])
+            dy = (p2[1]-center[1])
+            new_p2 = center[0]+np.cos(r)*dx-np.sin(r)*dy, center[1]+np.sin(r)*dx+np.cos(r)*dy
+            new_p1 = int(new_p1[0]), int(new_p1[1])
+            new_p2 = int(new_p2[0]), int(new_p2[1])
+            drawLine(missionTarget[1], new_p1, new_p2, missionTarget[4], canvas, brushColor=missionTarget[5])
+        if missionTarget[0] == 'polygon':
+            vertices = missionTarget[2]
+            new_vertices = []
+            for i in vertices:
+                dx = (i[0]-center[0])
+                dy = (i[1]-center[1])
+                new_i = center[0]+np.cos(r)*dx-np.sin(r)*dy, center[1]+np.sin(r)*dx+np.cos(r)*dy
+                new_i = int(new_i[0]),int(new_i[1])
+                new_vertices.append(new_i)
+            drawPolygon(missionTarget[1], new_vertices, missionTarget[3], canvas, brushColor=missionTarget[4])
+        if missionTarget[0] == 'ellipse':
+            center_e = missionTarget[2]
+            dx = center_e[0] - center[0]
+            dy = center_e[1] - center[1]
+            center_e = center[0]+np.cos(r)*dx-np.sin(r)*dy, center[1]+np.sin(r)*dx+np.cos(r)*dy
+            drawEllipse(missionTarget[1],center_e, missionTarget[3], canvas, missionTarget[4], brushColor=missionTarget[5])
+        if missionTarget[0] == 'curve':
+            points = missionTarget[2]
+            new_points = []
+            for i in points:
+                dx = (i[0]-center[0])
+                dy = (i[1]-center[1])
+                new_i = center[0]+np.cos(r)*dx-np.sin(r)*dy, center[1]+np.sin(r)*dx+np.cos(r)*dy
+                new_i = int(new_i[0]),int(new_i[1])
+                new_points.append(new_i)
+            drawCurve(missionTarget[1], new_points, missionTarget[3], canvas,brushColor= missionTarget[4])
+        target = Objects.missionList.pop()
+        missionTarget.clear()
+        while (target):
+            missionTarget.append(target.pop(0))
+        
+        #print(id, center, r)
     except ValueError:
         pass
 
@@ -544,7 +615,7 @@ def scale(id, center, s, canvas):
             missionTarget.append(target.pop(0))
         
             
-        print(id,center,s)
+        #print(id,center,s)
     except ValueError:
         pass
 # Defining region codes 
@@ -685,7 +756,7 @@ def clip(id, p1, p2, algorithm, canvas):
         if Objects.missionList[index][0] != "line":
             print("The clip target is not a line, please select a new target!")
             return
-        print(Objects.missionList[index]) 
+#print(Objects.missionList[index]) 
         x1, y1 = Objects.missionList[index][2]
         x2, y2 = Objects.missionList[index][3]
         brushColor = Objects.missionList[index][5]

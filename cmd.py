@@ -46,14 +46,14 @@ def cmd(f_addr):
                 points.append((x,y))
             algorithms.drawCurve(int(wordlist[1]), points, wordlist[3], None, Objects.brushColor)
         elif wordlist[0] == "translate":
-            d = int(wordlist[2]), -int(wordlist[3])
+            d = float(wordlist[2]), -float(wordlist[3])
             algorithms.translate(int(wordlist[1]), d, None)
         elif wordlist[0] == "rotate":
             center = int(wordlist[2]),  Objects.height - int(wordlist[3])
-            algorithms.rotate(int(wordlist[1]), center, 3.14*int(wordlist[4])/180, None)
+            algorithms.rotate(int(wordlist[1]), center, 3.14*float(wordlist[4])/180, None)
         elif wordlist[0] == "scale":
             center = int(wordlist[2]), Objects.height - int(wordlist[3])
-            algorithms.scale(int(wordlist[1]), center, int(wordlist[4]), None)
+            algorithms.scale(int(wordlist[1]), center, float(wordlist[4]), None)
         elif wordlist[0] == "clip":
             p1 = int(wordlist[2]), Objects.height - int(wordlist[5])
             p2 = int(wordlist[4]), Objects.height - int(wordlist[3])
